@@ -30,7 +30,7 @@ City *rightCity=(City *)right;
 return stricmp(leftCity->name,rightCity->name);
 }
 
-void popluateDataStructure(int *success)
+void populateDataStructure(int *success)
 {
 FILE *cityFile;
 City *city;
@@ -51,9 +51,10 @@ printf("Unable to load data, low memory issue\n");
 destroyAVLTree(cities);
 return;
 }
-cityFile=fopen("city.dat","rb");
+cityFile=fopen("city.dat","rb+");
 if(cityFile!=NULL)
 {
+printf("files is opened\n");
 fread(&cityHeader,sizeof(CityHeader),1,cityFile);
 if(!(feof(cityFile)))
 {
@@ -71,6 +72,11 @@ insertIntoAVLTree(citiesByName,(void *)city,&succ);
 }
 fclose(cityFile);
 } // loading data from file ends here
+if(getSizeOfAVLTree(cities))
+{
+cityHeader.lastGeneratedCode=0;
+cityHeader.recordCount=0;
+}
 if(success) *success=true;
 }
 void releaseDataStructure()
@@ -80,7 +86,68 @@ destroyAVLTree(citiesByName);
 }
 void addCity()
 {
-
+City c;
+City *city;
+FILE *cityFile;
+char m;
+char name[52];
+int succ;
+printf("City (Add Module)\n");
+printf("Enter City Name: ");
+fgets(name,52,stdin);
+fflush(stdin);
+name[strlen(name)-1]='\0';
+strcpy(c.name,name);
+city=(City *)getFromAVLTree(citiesByName,(void *)&c,&succ);
+if(city!=NULL)
+{
+printf("%s is already Exist\n");
+return;
+}
+printf("Press (Y/y) to save %s: ",name);
+m=getchar();
+fflush(stdin);
+if(m!='Y' || m!='y')
+{
+printf("%s is not Added\n",name);
+}
+cityFile=fopen("city.dat","rb+");
+if(cityFile==NULL)
+{
+cityFile=fopen("city.dat","wb+");
+fwrite(&cityHeader,sizeof(CityHeader),1,cityFile);
+}
+else
+{
+fseek(cityFile,0,SEEK_END);
+}
+c.code=cityHeader.lastGeneratedCode+1;
+fwrite(&c,sizeof(City),1,cityFile);
+cityHeader.lastGeneratedCode++;
+cityHeader.recordCount++;
+fseek(cityFile,0,SEEK_SET);
+fwrite(&cityHeader,sizeof(CityHeader),1,cityFile);
+fclose(cityFile);
+city=(City *)malloc(sizeof(City));
+// if city is NULL then code is pending
+city->code=c.code;
+strcpy(city->name,c.name);
+insertIntoAVLTree(cities,(void *)city,&succ);
+insertIntoAVLTree(citiesByName,(void *)city,&succ);
+// if insertion is avl tree is failed then implementation is pending
+printf("%s is Added\n");
+getchar();
+fflush(stdin);
+}
+void displayListOfCities()
+{
+City *city;
+printf("City (Display Module)\n");
+if(getSizeOfAVLTree(cities)==0)
+{
+printf("No Cities added\n");
+return;
+}
 }
 int mainMenu()
 {
@@ -125,23 +192,19 @@ printf("Invalid input\n");
 continue;
 }
 if(ch==1) addCity();
+if(ch==5) displayListOfCities();
 if(ch==7) return;
 }
 }
 int main()
 {
 int ch,succ;
-popluateDataStructure(&succ);
+populateDataStructure(&succ);
 while(1)
 {
 ch=mainMenu();
-if(ch==1)
-{
-cityMenu();
-}
-if(ch==2)
-{
-}
+if(ch==1) cityMenu();
+// if(ch==2) 
 if(ch==3) break;
 }
 releaseDataStructure();
