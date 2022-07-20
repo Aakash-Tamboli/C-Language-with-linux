@@ -7,11 +7,13 @@ typedef struct __city
 int code;
 char name[51];
 }City;
+
 typedef struct __city_header
 {
 int lastGeneratedCode;
 int recordCount;
 }CityHeader;
+
 // global data structures
 AVLTree *cities;
 AVLTree *citiesByName;
@@ -51,10 +53,9 @@ printf("Unable to load data, low memory issue\n");
 destroyAVLTree(cities);
 return;
 }
-cityFile=fopen("city.dat","rb+");
+cityFile=fopen("city.dat","rb");
 if(cityFile!=NULL)
 {
-printf("files is opened\n");
 fread(&cityHeader,sizeof(CityHeader),1,cityFile);
 if(!(feof(cityFile)))
 {
@@ -72,21 +73,23 @@ insertIntoAVLTree(citiesByName,(void *)city,&succ);
 fclose(cityFile);
 }
 }
-printf("%d",1);
 if(getSizeOfAVLTree(cities)==0)
 {
-cityHeader.lastGeneratedCode=0;
-cityHeader.recordCount=0;
+cityHeader.lastGeneratedCode=1;
+cityHeader.recordCount=1;
 }
-printf("%d",2);
 if(success) *success=true;
-printf("%d",3);
-printf("Populate Data Structure is Complete\n");
 }
 void releaseDataStructure()
 {
+// pending memory leak issue.
 destroyAVLTree(cities);
 destroyAVLTree(citiesByName);
+}
+void printLine()
+{
+int i;
+for(i=0;i<25;i++) printf("-");
 }
 void addCity()
 {
@@ -111,9 +114,10 @@ return;
 printf("Press (Y/y) to save %s: ",name);
 m=getchar();
 fflush(stdin);
-if(m!='Y' || m!='y')
+if(m!='Y' && m!='y')
 {
 printf("%s is not Added\n",name);
+return;
 }
 cityFile=fopen("city.dat","rb+");
 if(cityFile==NULL)
@@ -139,19 +143,57 @@ strcpy(city->name,c.name);
 insertIntoAVLTree(cities,(void *)city,&succ);
 insertIntoAVLTree(citiesByName,(void *)city,&succ);
 // if insertion is avl tree is failed then implementation is pending
-printf("%s is Added\n");
+printf("%s is Added\n",name);
+printf("Press any key to continue..................\n");
+getchar();
+fflush(stdin);
+}
+void searchCity()
+{
+City c;
+City *city;
+char name[52];
+int succ;
+printf("Enter city name: ");
+fgets(name,52,stdin);
+fflush(stdin);
+name[strlen(name)-1]='\0';
+strcpy(c.name,name);
+city=(City *)getFromAVLTree(citiesByName,(void *)&c,&succ);
+if(!succ)
+{
+printf("%s not found\n",name);
+return;
+}
+printf("%s is found\n",name);
+printf("Press any key to continue...................\n");
 getchar();
 fflush(stdin);
 }
 void displayListOfCities()
 {
+int succ;
 City *city;
+AVLTreeInOrderIterator it;
 printf("City (Display Module)\n");
 if(getSizeOfAVLTree(cities)==0)
 {
 printf("No Cities added\n");
 return;
 }
+it=getAVLTreeInOrderIterator(cities,&succ);
+printLine();
+while(hasNextInOrderElementInAVLTree(&it))
+{
+city=(City *)getNextInOrderElementFromAVLTree(&it,&succ);
+
+}
+/*
+	Note : Use the logic applied in displayListOfStudents
+	after every 15 record, press enter to continue message
+	pause with press enter to continue message after evry page
+	as well as in the end
+*/
 }
 int mainMenu()
 {
@@ -196,6 +238,7 @@ printf("Invalid input\n");
 continue;
 }
 if(ch==1) addCity();
+if(ch==4) searchCity();
 if(ch==5) displayListOfCities();
 if(ch==7) return;
 }
@@ -204,12 +247,11 @@ int main()
 {
 int ch,succ;
 populateDataStructure(&succ);
-if(succ==true) printf("Data Structure is loaded\n");
+printf("I am from main\n");
 while(1)
 {
 ch=mainMenu();
 if(ch==1) cityMenu();
-// if(ch==2) 
 if(ch==3) break;
 }
 releaseDataStructure();
