@@ -69,15 +69,19 @@ strcpy(city->name,c.name);
 insertIntoAVLTree(cities,(void *)city,&succ);
 insertIntoAVLTree(citiesByName,(void *)city,&succ);
 }
-}
 fclose(cityFile);
-} // loading data from file ends here
-if(getSizeOfAVLTree(cities))
+}
+}
+printf("%d",1);
+if(getSizeOfAVLTree(cities)==0)
 {
 cityHeader.lastGeneratedCode=0;
 cityHeader.recordCount=0;
 }
+printf("%d",2);
 if(success) *success=true;
+printf("%d",3);
+printf("Populate Data Structure is Complete\n");
 }
 void releaseDataStructure()
 {
@@ -200,6 +204,7 @@ int main()
 {
 int ch,succ;
 populateDataStructure(&succ);
+if(succ==true) printf("Data Structure is loaded\n");
 while(1)
 {
 ch=mainMenu();

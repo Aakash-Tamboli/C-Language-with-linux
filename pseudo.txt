@@ -1,0 +1,102 @@
+Globals
+	cities:AVLTree *
+	citiesByName:AVLTree *
+	cityHeader:CityHeader
+function populateDataStrucutres(success:int * )
+	create cities AVLTree
+	if not successful then return
+	create citiesByName AVLTree
+	if not successful then destroy cities AVLTree and return
+	open city.dat in rb mode
+	if opened
+	read cityHeader into cityHeader structure
+		if eof not crossed
+			loop start
+				read a record into a structure named as (c:City)
+				if eof crossed, break out of loop
+				create a structure of type City (using malloc)
+				set its code to c.code
+				set its name to c.name
+				insert address of structure into cities AVLTree
+				insert address of structure into citiesByName AVLTree
+			loop ends
+		end if
+	end if
+	if size of cities AVLTree is zero
+	cityHeader.lastGeneratedCode=0
+	cityHeader.recordCount=0
+	end if
+end function (populateDataStructure)
+function addCity(void):void
+	Local variables/structures
+	c: City
+	file: FILE *
+	m:char
+	name:char[52]
+	print module title ---> City (Add Module)
+	ask for name of city
+	set name feeded by user into c.name using string copy function
+	city=(City)getFromAVLTree(citiesByName,(void *)&c,&succ)
+	if city is not null then
+		print city exist and return
+	end if
+	ask if the user wants to save in variable m
+	if not y/ Y then
+		print message --> City not added and return
+	end if
+	open file (city.dat) in rb+ mode
+	if file not opened
+		open file (city.dat) in wb+ mode
+		write cityHeader structure to file
+	else
+	move the internal pointer to end
+	end if
+	c.code=cityHeader.lastGeneratedCode+1
+	write structure (c) to file using fwrite
+	cityHeader.lastGeneratedCode++
+	cityHeader.recordCount++
+	move the internal file pointer to start of file (fseek with file,0,SEEK_SET)
+	cityHeader.lastGeneratedCode++
+	cityHeader.recordCount++
+	write cityHeader to file
+	close file
+	create a new structure city=(City )malloc(sizeof(City))
+	city- >code=c.code
+	using string copy to copy c.name to city->name
+	insert value of city (City *) into cities AVLTree
+	insert value of city (City *) into citiesByName AVLTree
+	print message : City added
+	pause with press enter to continue message
+end function (addCity)
+function displayListOfCities(void): void
+	Local variables/structures
+	as per requirement to traverse citiesByName AVLTree
+	city: City *
+	display heading (Cities (Display Module))
+	if size of cities AVLTree is zero then
+		print No cities added message and return
+	end if
+	create iterator (inorder) to traverse citiesByName AVLTree
+	loop starts (iteration)
+		city=(City *)getNext from AVLTree
+		print name only
+	loop ends
+	Note : Use the logic applied in displayListOfStudents
+	after every 15 record, press enter to continue message
+	pause with press enter to continue message after evry page
+	as well as in the end
+end function (displayListOfCities)
+function searchCity(void):void
+	Local variables/structures
+	c:City
+	name:char [52]
+	ask for name of city from user in name array
+	remove \n and copy it to c.name using string copy
+	search name in citiesByName using the following code
+	city=(City)getFromAVLtTree(citiesByName,(void *)&c,&succ)
+	if not found (city==null) then
+		print Invalid city message and return
+	endif
+	print city->name as name of city
+	pause with press enter to continue message
+end function (searchCity)
