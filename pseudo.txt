@@ -100,3 +100,28 @@ function searchCity(void):void
 	print city->name as name of city
 	pause with press enter to continue message
 end function (searchCity)
+function editCity()
+	local variables/structures
+	city:City *
+	m:char
+	name:char[52]
+	some more as per required
+	ask name
+	serach name, if does not exist, print message and return
+	ask(Edit)
+	if answer is no, print message and return
+	as new name
+	if new name is not equal to old name then
+		search for new name, if exists, print message and return
+	endif
+	ask (update)
+	if yes open file search record and update
+		Note: No temp is required use r+, while searching keep trap of location
+	         	         (start point of record) for that, use ftell(file) function
+	         	         if found go to the location (start point of record)
+	         	         write the structure containing code and new name remove from
+	         	         from citiesByName AVL Tree on basis of old name
+	         	         add structure the new name to AVLTree (cities by name)
+	 // think about what to do with cities AVLTree
+	print updated message
+end function
