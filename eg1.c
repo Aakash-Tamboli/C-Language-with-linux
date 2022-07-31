@@ -86,10 +86,10 @@ void releaseDataStructure()
 destroyAVLTree(cities);
 destroyAVLTree(citiesByName);
 }
-void printLine()
+void printLine(char c,int numberOfTimes)
 {
 int i;
-for(i=0;i<25;i++) printf("-");
+for(i=0;i<numberOfTimes;i++) printf("%c",c);
 }
 void addCity()
 {
@@ -108,7 +108,7 @@ strcpy(c.name,name);
 city=(City *)getFromAVLTree(citiesByName,(void *)&c,&succ);
 if(city!=NULL)
 {
-printf("%s is already Exist\n");
+printf("%s is already Exist\n",c.name);
 return;
 }
 printf("Press (Y/y) to save %s: ",name);
@@ -172,7 +172,7 @@ fflush(stdin);
 }
 void displayListOfCities()
 {
-int succ;
+int succ,serialNumber;
 City *city;
 AVLTreeInOrderIterator it;
 printf("City (Display Module)\n");
@@ -182,11 +182,25 @@ printf("No Cities added\n");
 return;
 }
 it=getAVLTreeInOrderIterator(cities,&succ);
-printLine();
+serialNumber=0;
+while(hasNextInOrderElementInAVLTree(&it))
+{
+printLine('-',86);
+printf("Serial Number | City Name\n");
+printLine('-',86);
+printf("\n");
 while(hasNextInOrderElementInAVLTree(&it))
 {
 city=(City *)getNextInOrderElementFromAVLTree(&it,&succ);
-
+printf("%6d",serialNumber+1);
+printf("%9c ",'|');
+printf("%s\n",city->name);
+if((serialNumber+1)%5==0) break;
+serialNumber++;
+}
+printf("Press any key to Continue................\n");
+getchar();
+fflush(stdin);
 }
 /*
 	Note : Use the logic applied in displayListOfStudents
@@ -247,7 +261,6 @@ int main()
 {
 int ch,succ;
 populateDataStructure(&succ);
-printf("I am from main\n");
 while(1)
 {
 ch=mainMenu();
