@@ -148,6 +148,94 @@ printf("Press any key to continue..................\n");
 getchar();
 fflush(stdin);
 }
+void editCity()
+{
+City *city,*city2;
+FILE *cityFile;
+CityHeader vHeader;
+City c;
+char m;
+int succ,position;
+char name[52],newName[52];
+printf("City (Edit Module)\n");
+printf("Enter name of city to edit: ");
+fgets(name,52,stdin);
+fflush(stdin);
+name[strlen(name)-1]='\0';
+strcpy(c.name,name);
+city=(City *)getFromAVLTree(citiesByName,(void *)&c,&succ);
+if(!succ)
+{
+printf("City %s, does not exist, press enter to continue....",name);
+getchar();
+fflush(stdin);
+return;
+}
+printf("City: %s\n",city->name);
+printf("Edit (Y/N): ");
+m=getchar();
+fflush(stdin);
+if(m!='y' && m!='Y')
+{
+printf("City %s, not updated, press enter to continue.....",name);
+getchar();
+fflush(stdin);
+return;
+}
+printf("Enter new name of city: ");
+fgets(newName,52,stdin);
+newName[strlen(newName)-1]='\0';
+if(strcmp(name,newName)!=0)
+{
+strcpy(c.name,newName);
+city2=(City *)getFromAVLTree(citiesByName,(void *)&c,&succ);
+if(succ && city->code!=city2->code)
+{
+printf("City %s exists, press enter to continue.....",newName);
+getchar();
+fflush(stdin);
+return;
+}
+}
+printf("Update (Y/N): ");
+m=getchar();
+fflush(stdin);
+if(m!='y' && m!='Y')
+{
+printf("City %s not updated, press enter to continue......",name);
+getchar();
+fflush(stdin);
+return;
+}
+cityFile=fopen("city.dat","rb+");
+fread(&vHeader,sizeof(CityHeader),1,cityFile);
+while(1)
+{
+position=ftell(cityFile);
+fread(&c,sizeof(City),1,cityFile);
+if(feof(cityFile)) break;
+if(strcmp(city->name,c.name)==0)
+{
+fseek(cityFile,position,SEEK_SET);
+c.code=city->code;
+strcpy(c.name,newName);
+fwrite(&c,sizeof(City),1,cityFile);
+break;
+}
+}
+fclose(cityFile);
+strcpy(c.name,city->name);
+c.code=city->code;
+removeFromAVLTree(citiesByName,(void *)&c,&succ);
+removeFromAVLTree(cities,(void *)&c,&succ);
+strcpy(city->name,newName);
+insertIntoAVLTree(cities,(void *)city,&succ);
+insertIntoAVLTree(citiesByName,(void *)city,&succ);
+printf("City %s updated to city %s\n",name,newName);
+printf("Press enter to continue.................");
+getchar();
+fflush(stdin);
+} // function end
 void searchCity()
 {
 City c;
@@ -195,8 +283,8 @@ city=(City *)getNextInOrderElementFromAVLTree(&it,&succ);
 printf("%6d",serialNumber+1);
 printf("%9c ",'|');
 printf("%s\n",city->name);
-if((serialNumber+1)%5==0) break;
 serialNumber++;
+if(serialNumber%5==0) break;
 }
 printf("Press any key to Continue................\n");
 getchar();
@@ -252,6 +340,7 @@ printf("Invalid input\n");
 continue;
 }
 if(ch==1) addCity();
+if(ch==2) editCity();
 if(ch==4) searchCity();
 if(ch==5) displayListOfCities();
 if(ch==7) return;
