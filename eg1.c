@@ -236,6 +236,82 @@ printf("Press enter to continue.................");
 getchar();
 fflush(stdin);
 } // function end
+void removeCity()
+{
+City *city;
+FILE *cityFile,*tmpFile;
+CityHeader vHeader;
+City c;
+char m;
+int succ,position;
+char name[52];
+printf("City (Delete Module)\n");
+printf("Enter name of city to delete: ");
+fgets(name,52,stdin);
+fflush(stdin);
+name[strlen(name)-1]='\0';
+strcpy(c.name,name);
+city=(City *)getFromAVLTree(citiesByName,(void *)&c,&succ);
+if(!succ)
+{
+printf("City %s, does not exist, press enter to continue.....",name);
+getchar();
+fflush(stdin);
+return;
+}
+printf("City: %s\n",city->name);
+printf("Delete (Y/N): ");
+m=getchar();
+fflush(stdin);
+if(m!='y' && m!='Y')
+{
+printf("City %s, not removed, press enter to continue.....",name);
+getchar();
+fflush(stdin);
+}
+cityFile=fopen("city.dat","rb+");
+fread(&vHeader,sizeof(CityHeader),1,cityFile);
+while(1)
+{
+position=ftell(cityFile);
+fread(&c,sizeof(City),1,cityFile);
+if(feof(cityFile)) break;
+if(strcmp(city->name,c.name)==0)
+{
+break;
+}
+}
+tmpFile=fopen("tmp.tmp","wb+");
+while(1)
+{
+fread(&c,sizeof(City),1,cityFile);
+if(feof(cityFile)) break;
+fwrite(&c,sizeof(City),1,tmpFile);
+}
+fseek(cityFile,position,SEEK_SET);
+fseek(tmpFile,0,SEEK_SET);
+while(1)
+{
+fread(&c,sizeof(City),1,tmpFile);
+if(feof(tmpFile)) break;
+fwrite(&c,sizeof(City),1,cityFile);
+}
+cityHeader.recordCount--;
+fseek(cityFile,0,SEEK_SET);
+fwrite(&cityHeader,sizeof(CityHeader),1,cityFile);
+// ????????????????
+// some code to set the length to the file less by sizeof(city))
+// some code to set the length of tmp file to zero..
+fclose(cityFile);
+fclose(tmpFile);
+c.code=city->code;
+strcpy(c.name,city->name);
+removeFromAVLTree(citiesByName,(void *)&c,&succ);
+removeFromAVLTree(cities,(void *)&c,&succ);
+printf("City %s removed, press enter to continue",name);
+getchar();
+fflush(stdin);
+}
 void searchCity()
 {
 City c;
@@ -340,10 +416,11 @@ printf("Invalid input\n");
 continue;
 }
 if(ch==1) addCity();
-if(ch==2) editCity();
-if(ch==4) searchCity();
-if(ch==5) displayListOfCities();
-if(ch==7) return;
+else if(ch==2) editCity();
+else if(ch==3) removeCity();
+else if(ch==4) searchCity();
+else if(ch==5) displayListOfCities();
+else if(ch==7) return;
 }
 }
 int main()
