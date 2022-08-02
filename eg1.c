@@ -243,7 +243,7 @@ FILE *cityFile,*tmpFile;
 CityHeader vHeader;
 City c;
 char m;
-int succ,position;
+int succ;
 char name[52];
 printf("City (Delete Module)\n");
 printf("Enter name of city to delete: ");
@@ -269,45 +269,41 @@ printf("City %s, not removed, press enter to continue.....",name);
 getchar();
 fflush(stdin);
 }
-cityFile=fopen("city.dat","rb+");
+cityFile=fopen("city.dat","rb");
+tmpFile=fopen("tmp.tmp","wb");
 fread(&vHeader,sizeof(CityHeader),1,cityFile);
-while(1)
-{
-position=ftell(cityFile);
-fread(&c,sizeof(City),1,cityFile);
-if(feof(cityFile)) break;
-if(strcmp(city->name,c.name)==0)
-{
-break;
-}
-}
-tmpFile=fopen("tmp.tmp","wb+");
+cityHeader.recordCount--;
+fwrite(&cityHeader,sizeof(CityHeader),1,tmpFile);
 while(1)
 {
 fread(&c,sizeof(City),1,cityFile);
 if(feof(cityFile)) break;
+if(strcmp(city->name,c.name)!=0)
+{
 fwrite(&c,sizeof(City),1,tmpFile);
 }
-fseek(cityFile,position,SEEK_SET);
-fseek(tmpFile,0,SEEK_SET);
+}
+fclose(tmpFile);
+fclose(cityFile);
+cityFile=fopen("city.dat","wb");
+tmpFile=fopen("tmp.tmp","rb");
+fread(&vHeader,sizeof(CityHeader),1,tmpFile);
+fwrite(&vHeader,sizeof(CityHeader),1,cityFile);
 while(1)
 {
 fread(&c,sizeof(City),1,tmpFile);
 if(feof(tmpFile)) break;
 fwrite(&c,sizeof(City),1,cityFile);
 }
-cityHeader.recordCount--;
-fseek(cityFile,0,SEEK_SET);
-fwrite(&cityHeader,sizeof(CityHeader),1,cityFile);
-// ????????????????
-// some code to set the length to the file less by sizeof(city))
-// some code to set the length of tmp file to zero..
 fclose(cityFile);
+fclose(tmpFile);
+tmpFile=fopen("tmp.tmp","w");
 fclose(tmpFile);
 c.code=city->code;
 strcpy(c.name,city->name);
 removeFromAVLTree(citiesByName,(void *)&c,&succ);
-removeFromAVLTree(cities,(void *)&c,&succ);
+city=(City *)removeFromAVLTree(cities,(void *)&c,&succ);
+free(city);
 printf("City %s removed, press enter to continue",name);
 getchar();
 fflush(stdin);
