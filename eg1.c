@@ -2,6 +2,7 @@
 #include<stdlib.h>
 #include<string.h>
 #include<my_avl_tree.h>
+#include<my_pair.h>
 typedef struct __city
 {
 int code;
@@ -17,6 +18,7 @@ int recordCount;
 // global data structures
 AVLTree *cities;
 AVLTree *citiesByName;
+AVLTree *graph;
 CityHeader cityHeader;
 int cityCodeComparator(void *left,void *right)
 {
@@ -32,11 +34,43 @@ City *rightCity=(City *)right;
 return stricmp(leftCity->name,rightCity->name);
 }
 
+int graphVertexComparator(void *left,void *right)
+{
+Pair *leftPair;
+Pair *rightPair;
+City *leftCity;
+City *rightCity;
+leftPair=(Pair *)left;
+rightPair=(Pair *)right;
+leftCity=(City *)leftPair->first;
+rightCity=(City *)rightPair->first;
+return stricmp(leftCity->name,rightCity->name);
+}
+int adjacentVertexComparator(void *left,void *right)
+{
+Pair *leftPair;
+Pair *rightPair;
+City *leftCity;
+City *rightCity;
+leftPair=(Pair *)left;
+rightPair=(Pair *)right;
+leftCity=(City *)leftPair->first;
+rightCity=(City *)rightPair->first;
+return stricmp(leftCity->name,rightCity->name);
+}
 void populateDataStructure(int *success)
 {
 FILE *cityFile;
+FILE *graphFile;
 City *city;
+City *advCity;
+int *edgeWeight;
 City c;
+char m;
+Pair *p1,*p2;
+AVLTree *advTree;
+int acode,weight;
+int code;
 int succ;
 if(success) *success=false;
 printf("Please Wait, loading data..................\n");
@@ -51,6 +85,14 @@ if(!succ)
 {
 printf("Unable to load data, low memory issue\n");
 destroyAVLTree(cities);
+return;
+}
+graph=createAVLTree(&succ,graphVertexComparator);
+if(!succ)
+{
+printf("Unable to load data,low Memory issue\n");
+destroyAVLTree(cities);
+destroyAVLTree(citiesByName);
 return;
 }
 cityFile=fopen("city.dat","rb");
@@ -71,14 +113,77 @@ insertIntoAVLTree(cities,(void *)city,&succ);
 insertIntoAVLTree(citiesByName,(void *)city,&succ);
 }
 fclose(cityFile);
+if(getSizeOfAVLTree(cities)>0)
+{
+graphFile=fopen("graph.data","r");
+if(graphFile!=NULL)
+{
+while(1)
+{
+code=0;
+m=fgetc(graphFile);
+if(feof(graphFile)) break;
+code=(m-48);
+while(1)
+{
+m=fgetc(graphFile);
+if(m==',') break;
+code=(code*10)+(m-48);
+}
+c.code=code;
+city=(City *)getFromAVLTree(cities,(void *)&c,&succ);
+p1=(Pair *)malloc(sizeof(Pair));
+// pending failure check;
+p1->first=(void *)city;
+advTree=createAVLTree(&succ,adjacentVertexComparator);
+// pending success check
+p1->second=(void *)advTree;
+while(1)
+{
+acode=0;
+while(1)
+{
+m=fgetc(graphFile);
+if(m==',') break;
+acode=(acode*10)+(m-48);
+}
+weight=0;
+while(1)
+{
+m=fgetc(graphFile);
+if(m==',' || m=='#') break;
+weight=(weight*10)+(m-48);
+}
+c.code=acode;
+advCity=(City *)getFromAVLTree(cities,(void *)&c,&succ);
+p2=(Pair *)malloc(sizeof(Pair));
+p2->first=(void *)advCity;
+edgeWeight=(int *)malloc(sizeof(int));
+*edgeWeight=weight;
+p2->second=(void *)edgeWeight;
+insertIntoAVLTree(advTree,p2,&succ);
+if(m=='#') break;
+// success part pending
+} // all adjacent city element reading part complete
+insertIntoAVLTree(graph,p1,&succ);
+// verifying success part pending
+} // graphFile reading contents loop ends
+fclose(graphFile);
+} // graphFile!=NULL if part ends
 }
 }
+} // loading data from file ends here
+if(success) *success=true;
 if(getSizeOfAVLTree(cities)==0)
 {
+/*
+In sir this value is zero
+cityHeader.lastGeneratedCode=0;
+cityHeader.recordCount=0;
+*/
 cityHeader.lastGeneratedCode=1;
 cityHeader.recordCount=1;
 }
-if(success) *success=true;
 }
 void releaseDataStructure()
 {
