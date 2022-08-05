@@ -115,7 +115,7 @@ insertIntoAVLTree(citiesByName,(void *)city,&succ);
 fclose(cityFile);
 if(getSizeOfAVLTree(cities)>0)
 {
-graphFile=fopen("graph.data","r");
+graphFile=fopen("graph.dat","r");
 if(graphFile!=NULL)
 {
 while(1)
@@ -181,8 +181,8 @@ In sir this value is zero
 cityHeader.lastGeneratedCode=0;
 cityHeader.recordCount=0;
 */
-cityHeader.lastGeneratedCode=1;
-cityHeader.recordCount=1;
+cityHeader.lastGeneratedCode=0;
+cityHeader.recordCount=0;
 }
 }
 void releaseDataStructure()
@@ -234,10 +234,10 @@ else
 {
 fseek(cityFile,0,SEEK_END);
 }
-c.code=cityHeader.lastGeneratedCode+1;
-fwrite(&c,sizeof(City),1,cityFile);
 cityHeader.lastGeneratedCode++;
 cityHeader.recordCount++;
+c.code=cityHeader.lastGeneratedCode+1;
+fwrite(&c,sizeof(City),1,cityFile);
 fseek(cityFile,0,SEEK_SET);
 fwrite(&cityHeader,sizeof(CityHeader),1,cityFile);
 fclose(cityFile);
@@ -474,6 +474,110 @@ fflush(stdin);
 	as well as in the end
 */
 }
+void addAdjacentVertex()
+{
+int cityCode,advCode;
+City *city;
+City *advCity;
+char name[52];
+char advName[52];
+char m;
+Pair *graphPair;
+Pair *advPair;
+FILE *graphFile;
+City c;
+City advC;
+int succ;
+Pair gPair;
+Pair aPair;
+int weight;
+int shouldAppend;
+printf("Enter city against which you want to add adjacent cities: ");
+fgets(name,52,stdin);
+fflush(stdin);
+name[strlen(name)-1]='\0';
+strcpy(c.name,name);
+city=(City *)getFromAVLTree(citiesByName,(void *)&c,&succ);
+if(!succ)
+{
+printf("City %s does not exist\n",name);
+return;
+}
+cityCode=city->code;
+gPair.first=(void *)city;
+graphPair=(Pair *)getFromAVLTree(graph,(void *)&gPair,&succ);
+shouldAppend=0;
+if(!succ)
+{
+graphPair=NULL;
+shouldAppend=1;
+}
+
+
+while(1)
+{
+printf("Enter city adjacent to %s: ",name);
+fgets(advName,52,stdin);
+fflush(stdin);
+advName[strlen(advName)-1]='\0';
+strcpy(advC.name,advName);
+advCity=(City *)getFromAVLTree(citiesByName,(void *)&advC,&succ);
+if(!succ)
+{
+printf("City %s, does not exist\n",advName);
+printf("Want to add another city as city adjacent to %s (Y/N) :",name);
+m=getchar();
+fflush(stdin);
+if(m!='y' && m!='Y') break;
+continue;
+}
+advCode=advCity->code;
+printf("Enter weight of edge from %s to %s: ",name,advName);
+scanf("%d",&weight);
+fflush(stdin);
+if(weight<=0)
+{
+printf("Invalid weight\n");
+printf("Want to add another city as city adjacent to %s\n",name);
+m=getchar();
+fflush(stdin);
+if(m!='y' &&  m!='Y') break;
+continue;
+}
+printf("Save (Y/N): ");
+m=getchar();
+fflush(stdin);
+if(m=='y' || m=='Y')
+{
+if(graphPair==NULL)
+{
+graphPair=(Pair *)malloc(sizeof(Pair));
+graphPair=(void *)city; // yes i know it is logical error;
+// create new AVLTree for adjacent vetex and set it as second
+graphFile=fopen("graph.dat","a");
+fprintf(graphFile,"%d,%d,%d#",cityCode,advCode,weight);
+// create pair for advCity and weight and add that pair of advTree
+fclose(graphFile);
+}
+else if(shouldAppend==1)
+{
+graphFile=fopen("graph.dat","r+");
+fseek(graphFile,-1,SEEK_END);
+fprintf(graphFile,",%d,%d#",advCode,weight);
+fclose(graphFile);
+// create pair for advCity and weight and add that pair of advTree
+}
+else
+{
+// city data existed in graph
+}
+printf("Add more city as adjacent vertex to %s: ",name);
+m=getchar();
+fflush(stdin);
+if(m!='y' && m!='Y') break;
+} // save part ends
+}
+}
 int mainMenu()
 {
 int ch,succ;
@@ -521,6 +625,7 @@ else if(ch==2) editCity();
 else if(ch==3) removeCity();
 else if(ch==4) searchCity();
 else if(ch==5) displayListOfCities();
+else if(ch==6) addAdjacentVertex();
 else if(ch==7) return;
 }
 }
