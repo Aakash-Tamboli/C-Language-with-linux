@@ -500,6 +500,12 @@ fflush(stdin);
 }
 void addAdjacentVertex()
 {
+Pair *gp,*advp;
+City *gct,*advc;
+int *ewgt;
+AVLTree *advt;
+AVLTreeInOrderIterator graphAVLTreeInOrderIterator;
+AVLTreeInOrderIterator advAVLTreeInOrderIterator;
 int cityCode,advCode;
 City *city;
 City *advCity;
@@ -556,6 +562,17 @@ if(m!='y' && m!='Y') break;
 continue;
 }
 advCode=advCity->code;
+aPair.first=(void *)advCity;
+getFromAVLTree((AVLTree *)graphPair->second,&aPair,&succ);
+if(succ)
+{
+printf("City %s exists as adjacent to city %s\n",advName,name);
+printf("Want to add another city as city adjacent to %s (Y/N) :",name);
+m=getchar();
+fflush(stdin);
+if(m!='y' && m!='Y') break;
+continue;
+}
 printf("Enter weight of edge from %s to %s: ",name,advName);
 scanf("%d",&weight);
 fflush(stdin);
@@ -608,8 +625,40 @@ insertIntoAVLTree(advTree,(void *)advPair,&succ);
 }
 else
 {
-// city data existed in graph
-}
+advPair=(Pair *)malloc(sizeof(Pair));
+advPair->first=(void *)advCity;
+wgt=(int *)malloc(sizeof(int));
+*wgt=weight;
+advPair->second=(void *)wgt;
+advTree=(AVLTree *)graphPair->second;
+insertIntoAVLTree(advTree,(void *)advPair,&succ);
+// graph Updated, file yet to be update.
+/*
+Now you thinking it takes time.. yes it takes time but think when we
+create tmp file copy the data then copy back to orignal file it also take time 
+so, basically it is easy for as programmer when we have tree data structure
+who stores the all data of file and we update on file simple.
+*/
+graphFile=fopen("graph.dat","w");
+graphAVLTreeInOrderIterator=getAVLTreeInOrderIterator(graph,&succ);
+while(hasNextInOrderElementInAVLTree(&graphAVLTreeInOrderIterator))
+{
+gp=(Pair *)getNextInOrderElementFromAVLTree(&graphAVLTreeInOrderIterator,&succ);
+gct=(City *)gp->first;
+advt=(AVLTree *)gp->second;
+fprintf(graphFile,"%d,",gct->code);
+advAVLTreeInOrderIterator=getAVLTreeInOrderIterator(advt,&succ);
+while(hasNextInOrderElementInAVLTree(&advAVLTreeInOrderIterator))
+{
+advp=(Pair *)getNextInOrderElementFromAVLTree(&advAVLTreeInOrderIterator,&succ);
+advc=(City *)advp->first;
+ewgt=(int *)advp->second;
+if(hasNextInOrderElementInAVLTree(&advAVLTreeInOrderIterator)) fprintf(graphFile,"%d,%d,",advc->code,*ewgt);
+else fprintf(graphFile,"%d,%d#",advc->code,*ewgt);
+} // inner while ends
+} // outer while ends
+fclose(graphFile);
+} // else block ends
 printf("Add more city as adjacent vertex to %s (Y/N): ",name);
 m=getchar();
 fflush(stdin);
