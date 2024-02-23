@@ -1,0 +1,36 @@
+
+
+add following feature into tmterm library
+
+1st assignmment :
+int get_password(char *ptr,int size) // -1 or 0
+{
+-1 in case of error
+0 in case of error
+// procedure
+1) allocate memory size+1
+2) using fgets take input but echo off
+3) remove \n we know behaviour of fgets
+4) copy that password to ptr pointed blocks
+5) release that memory
+if everything is ok then return 0
+otherwise return 01
+}
+
+2nd assignment:
+design menu where it has option
+add
+edit 
+delete
+
+and when somebody press arrow key identify and accordigly apply square brackets
+initially
+[add]
+edit
+delete
+if someone press down arrow then
+add
+[edit]
+delete
+
+
