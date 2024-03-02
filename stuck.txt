@@ -1,0 +1,4 @@
+Setup:
+1) Open Browser and go to following link:
+https://www2.ccs.neu.edu/research/gpc/VonaUtils/vona/terminal/vtansi.htm#colors
+2) You have Task Description, I hope you found sol. and then do It may be copy bare-minmum functionality from eg4.c or eg5.c to create new one

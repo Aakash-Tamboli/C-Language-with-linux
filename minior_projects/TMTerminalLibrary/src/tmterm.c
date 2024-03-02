@@ -206,6 +206,7 @@ free(tmp);
 return -1;
 }
 fgets(tmp,size+1,stdin);
+fflush(stdin);
 tmp[strlen(tmp)-1]='\0';
 strcpy(ptr,tmp);
 free(tmp);
