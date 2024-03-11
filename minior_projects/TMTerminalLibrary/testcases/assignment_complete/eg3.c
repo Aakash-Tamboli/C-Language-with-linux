@@ -5,9 +5,12 @@
 #include<termio.h>
 
 // Menu Oriented Settings
-char options[]="Male";
-int checkedStatus=0;
+int choices[4]={1,0,0,0};
+char options[4][20]={"Math","English","Hindi","Programing"};
+int totalOptions=4;
 int selected=-1;
+int currentSelection=0;
+
 
 // Color Oriented Function start
 // Visit For VT-100 specific
@@ -84,6 +87,7 @@ set_background_color(background);
 
 
 
+
 void goToXY(int,int);
 void clearUp();
 void clearLine(int,int);
@@ -115,7 +119,8 @@ void say(int row,int column,char *str,int paint)
 goToXY(row,column);
 if(paint)
 {
-set_color('w','b');
+set_background_color('b');
+set_foreground_color('w');
 write(fileno(stdout),str,strlen(str));
 reset_color_settings();
 return;
@@ -146,11 +151,27 @@ errorExit("tcsetattr error\n");
 }
 char a,b,c;
 a=getchar();
-if(a==32)
+if(a==27) // it means Special key pressed arrow or function  Attention Don't confuse with special symbols special key means arrow or function f1,f2.. keys
 {
-checkedStatus=(checkedStatus==0)?1:0;
+// printf("Special key tapped\n");
+b=getchar();
+c=getchar();
+if(b==91 && c==65)
+{
+choices[currentSelection]=0;
+currentSelection--;
+if(currentSelection<0) currentSelection=totalOptions-1;
+choices[currentSelection]=1;
 }
-else if(a==10)
+else if(b==91 && c==66)
+{
+choices[currentSelection]=0;
+currentSelection++;
+if(currentSelection>(totalOptions-1)) currentSelection=0;
+choices[currentSelection]=1;
+}
+}
+else if(a=='\n')
 {
 selected=10; // 10 is marker that user selected option
 }
@@ -160,13 +181,27 @@ errorExit("tcsetattr error\n");
 }
 }
 
-void displayOptions()
+
+void displayMenuOptions()
 {
-char option[20];
-if(checkedStatus==0) sprintf(option,"%s [ ]",options);
-else sprintf(option,"%s [x]",options);
-say(5,25,option,0);
+int i;
+char targetOption[30];
+
+for(i=0;i<totalOptions;i++)
+{
+if(choices[i]==1)
+{
+sprintf(targetOption,"%10s (.)",options[i]);
+say(5+i,25,targetOption,0);
 }
+else
+{
+sprintf(targetOption,"%10s ( )",options[i]);
+say(5+i,25,targetOption,0);
+}
+}
+}
+
 
 int main()
 {
@@ -175,15 +210,21 @@ char selectedOption[30];
 while(1)
 {
 clearUp();
-displayOptions();
+displayMenuOptions();
 trapArrowKey();
 if(selected==10)
 {
-if(checkedStatus==1) sprintf(selectedOption,"%s is checked\n",options);
-else sprintf(selectedOption,"%s is unchecked\n",options);
-say(6,25,selectedOption,1);
+for(i=0;i<totalOptions;i++)
+{
+if(choices[i]==1)
+{
+sprintf(selectedOption,"%s Selected\n",options[i]);
+say(10,25,selectedOption,1);
+}
+}
 exit(0);
 }
+for(i=0;i<totalOptions;i++) clearLine(i+5,15); 
 }
 return 0;
 }

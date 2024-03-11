@@ -3,11 +3,20 @@
 #include<stdlib.h>
 #include<unistd.h>
 #include<termio.h>
+#include<math.h>
 
 // Menu Oriented Settings
-char options[]="Male";
-int checkedStatus=0;
+int choices[20]={1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
+char options[20][12]={"Opt-1","Opt-2","Opt-3","Opt-4","Opt-5","Opt-6","Opt-7","Opt-8","Opt-9","Opt-10","Opt-11","Opt-12","Opt-13","Opt-14","Opt-15","Opt-16","Opt-17","Opt-18","Opt-19","Opt-20"};
+int totalOptions=20;
+int numberOfOptionsToBeDisplay=4;
+int sp;
+int ep;
 int selected=-1;
+int previousSelection=-1;
+int currentSelection=0;
+
+
 
 // Color Oriented Function start
 // Visit For VT-100 specific
@@ -82,8 +91,6 @@ set_background_color(background);
 // color Oriend Function ends
 
 
-
-
 void goToXY(int,int);
 void clearUp();
 void clearLine(int,int);
@@ -91,6 +98,38 @@ void say(int,int,char *,int);
 void errorExit(const char *);
 void trapArrowKey();
 void changeColor();
+void displayMenuOptions();
+
+int main()
+{
+int i;
+char selectedOption[30];
+sp=0;
+ep=3;
+while(1)
+{
+clearUp();
+displayMenuOptions();
+trapArrowKey();
+if(selected==10)
+{
+for(i=0;i<totalOptions;i++) 
+{
+if(choices[i]==1)
+{
+sprintf(selectedOption,"%s selected\n",options[i]);
+say(10,25,selectedOption,1);
+}
+}
+exit(0);
+}
+for(i=0;i<numberOfOptionsToBeDisplay;i++) clearLine(i+5,15); 
+}
+return 0;
+}
+
+
+
 
 void clearUp()
 {
@@ -115,7 +154,8 @@ void say(int row,int column,char *str,int paint)
 goToXY(row,column);
 if(paint)
 {
-set_color('w','b');
+set_background_color('b');
+set_background_color('w');
 write(fileno(stdout),str,strlen(str));
 reset_color_settings();
 return;
@@ -146,11 +186,29 @@ errorExit("tcsetattr error\n");
 }
 char a,b,c;
 a=getchar();
-if(a==32)
+if(a==27) // it means Special key pressed arrow or function  Attention Don't confuse with special symbols special key means arrow or function f1,f2.. keys
 {
-checkedStatus=(checkedStatus==0)?1:0;
+// printf("Special key tapped\n");
+b=getchar();
+c=getchar();
+if(b==91 && c==65)
+{
+previousSelection=currentSelection;
+choices[currentSelection]=0;
+currentSelection--;
+if(currentSelection<0) currentSelection=totalOptions-1;
+choices[currentSelection]=1;
 }
-else if(a==10)
+else if(b==91 && c==66)
+{
+previousSelection=currentSelection;
+choices[currentSelection]=0;
+currentSelection++;
+if(currentSelection>(totalOptions-1)) currentSelection=0;
+choices[currentSelection]=1;
+}
+}
+else if(a=='\n')
 {
 selected=10; // 10 is marker that user selected option
 }
@@ -160,30 +218,49 @@ errorExit("tcsetattr error\n");
 }
 }
 
-void displayOptions()
+void displayMenuOptions()
 {
-char option[20];
-if(checkedStatus==0) sprintf(option,"%s [ ]",options);
-else sprintf(option,"%s [x]",options);
-say(5,25,option,0);
+int counter,i;
+// char tmp[50];
+if(currentSelection==0)
+{
+sp=0;
+ep=3;
+}
+else if(currentSelection==totalOptions-1)
+{
+ep=currentSelection;
+sp=ep-3;
+}
+else if(currentSelection>ep)
+{
+sp=sp+1;
+ep=ep+1;
+}
+else if(currentSelection<sp)
+{
+ep=ep-1;
+sp=sp-1;
 }
 
-int main()
+i=sp;
+
+counter=0;
+while(counter<numberOfOptionsToBeDisplay)
 {
-int i;
-char selectedOption[30];
-while(1)
+if(choices[i]==1)
 {
-clearUp();
-displayOptions();
-trapArrowKey();
-if(selected==10)
-{
-if(checkedStatus==1) sprintf(selectedOption,"%s is checked\n",options);
-else sprintf(selectedOption,"%s is unchecked\n",options);
-say(6,25,selectedOption,1);
-exit(0);
+// sprintf(tmp,"i=%d , choices[%d]=%d",counter,i,choices[i]);
+say(5+counter,25,options[i],1);
+// say(5+counter,55,tmp,1);
 }
+else
+{
+// sprintf(tmp,"i=%d , choices[%d]=%d",counter,i,choices[i]);
+say(5+counter,25,options[i],0);
+// say(5+counter,55,tmp,1);
 }
-return 0;
+i++;
+counter++;
+}
 }

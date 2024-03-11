@@ -7,6 +7,15 @@
 #include<termio.h>
 #include<stdlib.h>
 
+
+// Global Members starts
+
+struct termios old_state;
+struct termios new_state;
+
+// Global Members ends
+
+
 void clear()
 {
 write(fileno(stdout),"\033[2J",4); // see VT-100 Chart
@@ -22,6 +31,12 @@ https://www2.ccs.neu.edu/research/gpc/VonaUtils/vona/terminal/vtansi.htm
 <ESC> represents the ASCII "escape" character, hence its hex is: 0x1B. that's why sir wrote \0331B
 next '[2J' is Erases the screen with the background colour and moves the cursor to home.
 */
+}
+
+void clearLine(int row,int col)
+{
+goToXY(row,col);
+write(fileno(stdout),"\033[2K",4);
 }
 
 void goToXY(int row,int column)
@@ -78,6 +93,93 @@ https://en.wikipedia.org/wiki/Box-drawing_character
 }
 //--------------------------------------------------------------
 // Assignment Starts
+
+
+// hide and show input realted function starts
+
+void error_exit(const char *ptr)
+{
+printf("%s\n",ptr);
+exit(0);
+}
+
+void hide_input()
+{
+if(tcgetattr(STDIN_FILENO,&old_state)==-1)
+{
+error_exit("tcgetattr error\n");
+}
+new_state=old_state;
+new_state.c_lflag=new_state.c_lflag & ~(ECHO | ICANON);
+new_state.c_cc[VTIME]=0;
+new_state.c_cc[VMIN]=1; // it means we just want to read one character
+if(tcsetattr(STDIN_FILENO,0,&new_state)==-1)
+{
+error_exit("tcsetattr error\n");
+}
+}
+
+void show_input()
+{
+if(tcsetattr(STDIN_FILENO,0,&old_state)==-1)
+{
+error_exit("tcsetattr error\n");
+}
+}
+
+// hide and show input related function ends
+
+
+
+unsigned int trapArrowKey()
+{
+/*
+in docs i will clearly specify that if trapArrow key function returns
+65 then up-arrow key
+66 then down-arrow key
+67 then right-arrow key
+68 then left arrow key
+
+and if it returns none of those 4 then it return corresponding key press ascii code
+
+*/
+
+unsigned result;
+hide_blinking_cursor();
+char a,b,c;
+a=getchar();
+
+/*
+
+The ASCII values for the arrow keys are as follows:
+
+Up arrow: 27, 91, 65
+Down arrow: 27, 91, 66
+Left arrow: 27, 91, 68
+Right arrow: 27, 91, 67
+
+In nutshell: if ascii code is 27 then 100% arrow key is pressed by user
+if 91 and 65 then up-arrow key
+if 91 and 66 then down-arrow key
+if 91 and 68 then left arrow key
+if 91 and 67 then right arrow key
+
+*/
+
+
+if(a==27) // it means Special key pressed arrow or function  Attention Don't confuse with special symbols special key means arrow or function f1,f2.. keys
+{
+b=getchar();
+c=getchar();
+result=c;
+}
+else
+{
+result=a;
+}
+show_blinking_cursor();
+return result;
+}
 
 void drawVerticalLine(int column,int fromRow,int toRow) // column, from_row , to_row
 {
@@ -217,5 +319,97 @@ return -1;
 }
 return 0;
 }
+
+// Color Oriented Function start
+// Visit For VT-100 specific
+
+// https://www2.ccs.neu.edu/research/gpc/VonaUtils/vona/terminal/vtansi.htm
+
+void reset_color_settings()
+{
+char Reset[]="\033[0m";
+write(fileno(stdout),Reset,strlen(Reset));
+}
+
+void set_foreground_color(char c)
+{
+// black
+// blue
+// white
+char Bright[10]="\033[1m";
+
+char Dim[10]="\033[2m";
+char Underscore[10]="\033[4m";
+char Blink[10]="\033[5m";
+char Reverse[10]="\033[7m";
+char Hidden[10]="\033[8m";
+
+
+char Black[10]="\033[30m";
+char Red[10]="\033[31m";
+char Green[10]="\033[32m";
+char Yellow[10]="\033[33m";
+char Blue[10]="\033[34m";
+char Magenta[10]="\033[35m";
+char Cyan[10]="\033[36m";
+char White[10]="\033[37m";
+
+
+if(c=='b') write(fileno(stdout),Black,strlen(Black));
+else if(c=='n') write(fileno(stdout),Blue,strlen(Blue));
+else if(c=='w') write(fileno(stdout),White,strlen(White));
+// reset will be decide later on
+}
+
+void set_background_color(char c)
+{
+char Bright[10]="\033[1m";
+char Dim[10]="\033[2m";
+char Underscore[10]="\033[4m";
+char Blink[10]="\033[5m";
+char Reverse[10]="\033[7m";
+char Hidden[10]="\033[8m";
+
+
+char Black[10]="\033[40m";
+char Red[10]="\033[41m";
+char Green[10]="\033[42m";
+char Yellow[10]="\033[43m";
+char Blue[10]="\033[44m";
+char Magenta[10]="\033[45m";
+char Cyan[10]="\033[46m";
+char White[10]="\033[47m";
+
+if(c=='b') write(fileno(stdout),Black,strlen(Black));
+else if(c=='n') write(fileno(stdout),Blue,strlen(Blue));
+else if(c=='w') write(fileno(stdout),White,strlen(White));
+// reset will be decide later on
+}
+
+void set_color(char foreground,char background)
+{
+set_foreground_color(foreground);
+set_background_color(background);
+}
+
+// color Oriend Function ends
+
+
+// Hiding Cursor functionality starts
+
+void hide_blinking_cursor()
+{
+char hide_cursor[]="\033[?25l";
+write(fileno(stdout),hide_cursor,strlen(hide_cursor));
+}
+
+void show_blinking_cursor()
+{
+char show_cursor[]="\033[?25h";
+write(fileno(stdout),show_cursor,strlen(show_cursor));
+}
+
+// Hiding Cursor functionality ends
+
 
 #endif
